@@ -8,6 +8,8 @@
 
 using namespace std;
 
+const int INF = 9999999;
+
 // An attempt to model graphs
 class Graph {
 private:
@@ -30,6 +32,7 @@ public:
     Graph(int size) : size(size) {
         graph = new Edge*[size];
         vertices = new Vertex[size];
+
         for (int i = 0; i < size; ++i) {
             vertices[i].vertexNumber = i;
             vertices[i].vertexValue = 0;
@@ -42,14 +45,14 @@ public:
     }
 
     Graph(const std::string& filename) {
-        std::ifstream file(filename);
+        std::ifstream file(filename);   // Open file
 
+        // Check if file successfully opened
         if (!file.is_open()) {
             std::cerr << "Error opening the file: " << filename << std::endl;
             return;
         }
-
-        file >> size;
+        file >> size;   // Size of graph
 
         // Allocate memory for the graph
         graph = new Edge*[size];
@@ -67,22 +70,16 @@ public:
 
         int from, to, cost;
 
+        // Read initialize edges and costs
         while (file >> from >> to >> cost) {
-            if (from >= 0 && from < size && to >= 0 && to < size) {
-                graph[from][to].connected = true;
-                graph[to][from].connected = true;  // Make it undirected
-                graph[from][to].weight = cost;
-                graph[to][from].weight = cost;  // Make it undirected
-            } else {
-                std::cerr << "Invalid vertex indices in the file." << std::endl;
-                return;
-            }
+            graph[from][to].connected = true;
+            graph[to][from].connected = true;  // Make it undirected
+            graph[from][to].weight = cost;
+            graph[to][from].weight = cost;  // Make it undirected
         }
 
-        file.close();
+        file.close(); // Close file after reading data
     }
-
-
 
     // Deconstructor.
     ~Graph() {
@@ -178,6 +175,48 @@ public:
                 }
             }
         }
+    }
+
+    void primMST(){
+        int num_edge = 0;   // Counter for number of edges
+        vector<bool> selected(size, false);  // To track vertices that are selected in the MST
+        int total_weight = 0;  // Store total weight
+
+        selected[0] = true;    // Start MST from the first vertex
+
+        cout << "Edge : Weight" << endl;
+
+        while (num_edge < size - 1) {
+            int min = INF;
+            int x = 0;  // One endpoint for edge
+            int y = 0;  // Other endpoint
+
+            // Iterate over selected vertices
+            for (int i = 0; i < size; i++) {
+                if (selected[i]) {
+                    for (int j = 0; j < size; j++) {
+                        // Check if the vertex is not selected before and i and j connected
+                        if (!selected[j] && graph[i][j].connected) {
+                            // Check for the minimum
+                            if (min > graph[i][j].weight) {
+                                min = graph[i][j].weight;
+                                x = i;  // Update endpoints
+                                y = j;
+                            }
+                        }
+                    }
+                }
+            }
+            cout << x << " - " << y << " : " << graph[x][y].weight; // When minimum found print
+            cout << endl;
+            selected[y] = true; // Mark the endpoint as selected
+            num_edge++;
+            total_weight += graph[x][y].weight;
+
+        }
+
+        cout << "----------------------"<< endl;
+        cout << "Total cost of primMST: " << total_weight << endl;
     }
 
     // Print the graph as 2D array of boolean values
@@ -374,15 +413,14 @@ int main() {
     cout << "-----------------------------------------------------------------------" << endl;
     averageDistance(shortestPath2, numVertices);
 
-    Graph graphaa("sample_data.txt");
-    graphaa.print();
+    cout << "******\n" << endl;
 
-     if (__cplusplus == 202002L) std::cout << "C++20\n";
-    else if (__cplusplus == 201703L) std::cout << "C++17\n";
-    else if (__cplusplus == 201402L) std::cout << "C++14\n";
-    else if (__cplusplus == 201103L) std::cout << "C++11\n";
-    else if (__cplusplus == 199711L) std::cout << "C++98\n";
-    else std::cout << "pre-standard C++\n";
+    cout << "Read graph from file and implement prim's MST algorithm:" << endl;
+    cout << "--------------------------------------------------------" << endl;
+
+    Graph file_graph("sample_data.txt");    // Read from file
+
+    file_graph.primMST();   // Find MST
 
     return 0;
 }
